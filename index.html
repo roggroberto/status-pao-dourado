@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Executivo - Status de Projeto</title>
+    <!-- FontAwesome para Ícones Premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-principal: #f4f7fa;
+            --bg-card: #ffffff;
+            --azul-dark: #0f172a;
+            --azul-brand: #2563eb;
+            --azul-light: #eff6ff;
+            --azul-hover: #1d4ed8;
+            --texto-p: #1e293b;
+            --texto-s: #64748b;
+            --borda: #e2e8f0;
+            
+            /* Cores de Status */
+            --status-sucesso: #10b981;
+            --status-sucesso-bg: #ecfdf5;
+            --status-alerta: #f59e0b;
+            --status-alerta-bg: #fffbeb;
+            --status-erro: #ef4444;
+            --status-erro-bg: #fef2f2;
+            --status-neutro: #94a3b8;
+            --status-neutro-bg: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-principal);
+            color: var(--texto-p);
+            padding: 24px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        /* --- MARCA D'ÁGUA CORPORATIVA --- */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background-image: url('logo.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- CABEÇALHO --- */
+        .header-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            border-left: 6px solid var(--azul-brand);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .header-main-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+
+        .header-info h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--azul-dark);
+            margin-bottom: 4px;
+        }
+
+        .header-info p {
+            font-size: 14px;
+            color: var(--texto-s);
+        }
+
+        .header-info p strong {
+            color: var(--texto-p);
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .meta-item {
+            text-align: right;
+        }
+
+        .meta-item .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--texto-s);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .meta-item .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--azul-dark);
+        }
+
+        /* Semáforo Executivo */
+        .semaforo-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-principal);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--borda);
+        }
+
+        /* Indicador do Health Score Baseado na Logo */
+        .health-logo-indicator {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            padding: 2px;
+            background: var(--bg-card);
+            border: 2px solid #cbd5e1;
+        }
+        
+        .health-logo-indicator.health-red { border-color: var(--status-erro); filter: drop-shadow(0 0 4px var(--status-erro)); }
+        .health-logo-indicator.health-yellow { border-color: var(--status-alerta); filter: drop-shadow(0 0 4px var(--status-alerta)); }
+        .health-logo-indicator.health-green { border-color: var(--status-sucesso); filter: drop-shadow(0 0 4px var(--status-sucesso)); }
+
+        .light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .light.red.active { background: var(--status-erro); box-shadow: 0 0 8px var(--status-erro); }
+        .light.yellow.active { background: var(--status-alerta); box-shadow: 0 0 8px var(--status-alerta); }
+        .light.green.active { background: var(--status-sucesso); box-shadow: 0 0 8px var(--status-sucesso); }
+
+        .health-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--texto-p);
+            margin-left: 4px;
+        }
+
+        /* --- CARDS KPI --- */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .kpi-data .kpi-label {
+            font-size: 13px;
+            color: var(--texto-s);
+            font-weight: 500;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .kpi-data .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--azul-dark);
+            line-height: 1;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Variantes de Cores dos KPIs */
+        .kpi-blue { border-top: 4px solid var(--azul-brand); }
+        .kpi-blue .kpi-icon { background: var(--azul-light); color: var(--azul-brand); }
+        
+        .kpi-green { border-top: 4px solid var(--status-sucesso); }
+        .kpi-green .kpi-icon { background: var(--status-sucesso-bg); color: var(--status-sucesso); }
+        
+        .kpi-amber { border-top: 4px solid var(--status-alerta); }
+        .kpi-amber .kpi-icon { background: var(--status-alerta-bg); color: var(--status-alerta); }
+        
+        .kpi-orange { border-top: 4px solid #f97316; }
+        .kpi-orange .kpi-icon { background: #fff7ed; color: #f97316; }
+
+        .kpi-red { border-top: 4px solid var(--status-erro); }
+        .kpi-red .kpi-icon { background: var(--status-erro-bg); color: var(--status-erro); }
+
+        /* --- PROGRESSO BATERIA & RESUMO --- */
+        .overview-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .overview-section { grid-template-columns: 1fr; }
+        }
+
+        .main-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--azul-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--azul-brand);
+        }
+
+        /* Bateria de Carregamento */
+        .battery-wrapper {
+            background: #f8fafc;
+            border: 1px solid var(--borda);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .battery-outer {
+            width: 140px;
+            height: 65px;
+            border: 4px solid #475569;
+            border-radius: 10px;
+            padding: 4px;
+            position: relative;
+            background: #ffffff;
+            flex-shrink: 0;
+        }
+
+        .battery-outer::after {
+            content: '';
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 20px;
+            background: #475569;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .battery-inner {
+            height: 100%;
+            width: 0%; /* Alterado via JS */
+            border-radius: 4px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease;
+        }
+
+        .battery-data h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--azul-dark);
+            line-height: 1.2;
+        }
+
+        .battery-data p {
+            font-size: 13px;
+            color: var(--texto-s);
+        }
+
+        /* Donut Chart em CSS Puro */
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .donut-chart {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--status-sucesso) 0% 50%, 
+                var(--azul-brand) 50% 85%, 
+                var(--status-alerta) 85% 95%, 
+                var(--status-erro) 95% 100%
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .donut-chart::before {
+            content: "";
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            background: var(--bg-card);
+            border-radius: 50%;
+        }
+
+        .donut-center-text {
+            position: absolute;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .donut-center-text .number {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--azul-dark);
+            display: block;
+        }
+
+        .donut-center-text .label {
+            font-size: 11px;
+            color: var(--texto-s);
+            text-transform: uppercase;
+        }
+
+        .exec-summary-text {
+            font-size: 14.5px;
+            color: #334155;
+            line-height: 1.7;
+        }
+
+        /* --- TIMELINE DE PROJETO --- */
+        .timeline-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+        }
+
+        .timeline-scroll {
+            display: flex;
+            justify-content: space-between;
+            min-width: 900px;
+            padding: 20px 10px;
+            position: relative;
+        }
+
+        .timeline-scroll::before {
+            content: '';
+            position: absolute;
+            top: 36px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: var(--borda);
+            z-index: 1;
+        }
+
+        .timeline-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            border: 4px solid var(--bg-card);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 0 1px var(--borda);
+        }
+
+        .timeline-item.complete .timeline-icon {
+            background: var(--status-sucesso);
+            color: white;
+            box-shadow: 0 0 0 1px var(--status-sucesso);
+        }
+
+        .timeline-item.current .timeline-icon {
+            background: var(--azul-brand);
+            color: white;
+            box-shadow: 0 0 0 4px var(--azul-light);
+            transform: scale(1.1);
+        }
+
+        .timeline-name {
+            margin-top: 12px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--azul-dark);
+        }
+
+        .timeline-status {
+            font-size: 11px;
+            color: var(--texto-s);
+            margin-top: 2px;
+        }
+
+        .timeline-item.complete .timeline-status { color: var(--status-sucesso); font-weight: 500; }
+        .timeline-item.current .timeline-status { color: var(--azul-brand); font-weight: 600; }
+
+        /* --- SEÇÃO DE TABELAS --- */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .tables-grid { grid-template-columns: 1fr; }
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13.5px;
+        }
+
+        th {
+            background: var(--bg-principal);
+            color: var(--texto-s);
+            font-weight: 600;
+            padding: 12px 16px;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--borda);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--borda);
+            color: var(--texto-p);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Badges de Status das Tabelas */
+        .table-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tb-done { background: var(--status-sucesso-bg); color: var(--status-sucesso); }
+        .tb-doing { background: var(--azul-light); color: var(--azul-brand); }
+        .tb-pending { background: var(--status-alerta-bg); color: var(--status-alerta); }
+        .tb-risk-high { background: var(--status-erro-bg); color: var(--status-erro); }
+        .tb-risk-med { background: var(--status-alerta-bg); color: #d97706; }
+
+        /* --- PRÓXIMAS ETAPAS --- */
+        .next-steps-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .step-item {
+            background: var(--bg-principal);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border: 1px solid var(--borda);
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: var(--azul-brand);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-text h5 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--azul-dark);
+            margin-bottom: 2px;
+        }
+
+        .step-text p {
+            font-size: 12.5px;
+            color: var(--texto-s);
+        }
+
+        /* --- RODAPÉ --- */
+        footer {
+            text-align: center;
+            padding: 16px 0 8px 0;
+            font-size: 13px;
+            color: var(--texto-s);
+            border-top: 1px solid var(--borda);
+            margin-top: 12px;
+        }
+
+        footer strong {
+            color: var(--azul-brand);
+        }
+
+        /* --- ANIMAÇÕES --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <!-- CABEÇALHO COM LOGO -->
+        <header class="header-card">
+            <div class="header-main-info">
+                <img src="logo.png" alt="Simus ERP" class="header-logo">
+                <div class="header-info">
+                    <h1>Pão Dourado</h1>
+                    <p>Projeto: <strong>Implantação de Software ERP Superus</strong></p>
+                </div>
+            </div>
+            <div class="header-meta">
+                <div class="meta-item">
+                    <span class="label">Data do Relatório</span>
+                    <span class="value">24 de Junho de 2026</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">Status Geral</span>
+                    <span class="value" style="color: var(--status-alerta);"><i class="fa-solid fa-circle-dot"></i> Em andamento</span>
+                </div>
+                <!-- Semáforo Executivo com Indicador de Logo -->
+                <div class="semaforo-box">
+                    <img src="logo.png" alt="Health Indicator" class="health-logo-indicator" id="health-logo">
+                    <div class="light red" id="light-red"></div>
+                    <div class="light yellow" id="light-yellow"></div>
+                    <div class="light green" id="light-green"></div>
+                    <span class="health-text" id="health-label">Saúde: -</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CARDS KPI -->
+        <section class="kpi-grid">
+            <div class="kpi-card kpi-blue">
+                <div class="kpi-data">
+                    <span class="kpi-label">Progresso Realizado</span>
+                    <div class="kpi-value" id="kpi-progress">25.4%</div>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
+            </div>
+            <div class="kpi-card kpi-green">
+                <div class="kpi-data">
+                    <span class="kpi-label">Atividades Concluídas</span>
+                    <div class="kpi-value">6</div>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+            <div class="kpi-card kpi-amber">
+                <div class="kpi-data">
+                    <span class="kpi-label">Em Andamento</span>
+                    <div class="kpi-value">5</div>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-spinner fa-spin-slow"></i></div>
+            </div>
+            <div class="kpi-card kpi-orange">
+                <div class="kpi-data">
+                    <span class="kpi-label">Pendências Críticas</span>
+                    <div class="kpi-value">2</div>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-clock-history"></i></div>
+            </div>
+            <div class="kpi-card kpi-red">
+                <div class="kpi-data">
+                    <span class="kpi-label">Riscos Mapeados</span>
+                    <div class="kpi-value">2</div>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+        </section>
+
+        <!-- PROGRESSO PRINCIPAL & RESUMO -->
+        <section class="overview-section">
+            <div class="main-card">
+                <div class="card-title"><i class="fa-solid fa-align-left"></i> Resumo Executivo</div>
+                <p class="exec-summary-text">
+                    O projeto de implantação da rede Pão Dourado encontra-se em fase ativa de infraestrutura e preparação de base de dados, atingindo <strong>25.4% de progresso consolidado</strong>. Toda a etapa inicial de alinhamento estratégico, kick-offs e mapeamento de requisitos operacionais foi concluída com sucesso. Os esforços atuais do comitê técnico estão concentrados no provisionamento das imagens Linux, tratamento de dumps de dados e configuração de rede corporativa junto à Skyone, com previsão de término das estruturas básicas para esta semana.
+                </p>
+                <div style="margin-top: 24px;">
+                    <div class="card-title"><i class="fa-solid fa-battery-three-quarters"></i> Barra de Progresso Principal</div>
+                    <div class="battery-wrapper">
+                        <div class="battery-outer">
+                            <div class="battery-inner" id="main-battery-fill"></div>
+                        </div>
+                        <div class="battery-data">
+                            <h2 id="battery-percentage-text">0%</h2>
+                            <p id="battery-status-desc">Calculando índice de esforço...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico Donut de Distribuição de Esforço -->
+            <div class="main-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div class="card-title"><i class="fa-solid fa-pie-chart"></i> Volumetria da Esteira</div>
+                <div class="chart-container">
+                    <div class="donut-chart" id="volumetria-chart">
+                        <div class="donut-center-text">
+                            <span class="number">15</span>
+                            <span class="label">Demandas</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="legend-container" style="grid-template-columns: 1fr; font-size: 12px; border-top: 1px solid var(--borda); padding-top: 12px;">
+                    <div class="legend-item"><span class="legend-color" style="background: var(--status-sucesso);"></span> Concluídas (6)</div>
+                    <div class="legend-item"><span class="legend-color" style="background: var(--azul-brand);"></span> Em Andamento (5)</div>
+                    <div class="legend-item"><span class="legend-color" style="background: var(--status-alerta);"></span> Pendências (2)</div>
+                    <div class="legend-item"><span class="legend-color" style="background: var(--status-erro);"></span> Riscos (2)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TIMELINE DO PROJETO -->
+        <section class="main-card timeline-card">
+            <div class="card-title"><i class="fa-solid fa-route"></i> Timeline Macro do Projeto</div>
+            <div class="timeline-scroll">
+                <div class="timeline-item complete">
+                    <div class="timeline-icon"><i class="fa-solid fa-check"></i></div>
+                    <div class="timeline-name">Kick-Off</div>
+                    <div class="timeline-status">Concluído</div>
+                </div>
+                <div class="timeline-item complete">
+                    <div class="timeline-icon"><i class="fa-solid fa-check"></i></div>
+                    <div class="timeline-name">Levantamento</div>
+                    <div class="timeline-status">Concluído</div>
+                </div>
+                <div class="timeline-item current">
+                    <div class="timeline-icon">3</div>
+                    <div class="timeline-name">Infraestrutura</div>
+                    <div class="timeline-status">Em Execução</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon">4</div>
+                    <div class="timeline-name">Parametrização</div>
+                    <div class="timeline-status">Agendado</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon">5</div>
+                    <div class="timeline-name">Testes</div>
+                    <div class="timeline-status">Não Iniciado</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon">6</div>
+                    <div class="timeline-name">Treinamento</div>
+                    <div class="timeline-status">Não Iniciado</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+                    <div class="timeline-name">Go Live</div>
+                    <div class="timeline-status">Previsão: 01/08/26</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TABELAS DE ATIVIDADES -->
+        <section class="tables-grid">
+            
+            <!-- Concluídas -->
+            <div class="main-card">
+                <div class="card-title" style="color: var(--status-sucesso);"><i class="fa-solid fa-square-check"></i> Atividades Concluídas</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 55%;">Mapeamento da Atividade</th>
+                                <th style="width: 25%;">Data</th>
+                                <th style="width: 20%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>Kick-Off Operacional realizado</b> (Skyone + Pão Dourado)</td>
+                                <td>11/06/2026</td>
+                                <td><span class="table-badge tb-done">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Kick-Off Integrador efetuado</b> (Simus + Pão Dourado)</td>
+                                <td>12/06/2026</td>
+                                <td><span class="table-badge tb-done">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Reunião de Alinhamento e Levantamento de Requisitos</b></td>
+                                <td>16/06/2026</td>
+                                <td><span class="table-badge tb-done">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Mapeamento Tributário e Coleta de Licenças Básicas</b></td>
+                                <td>16/06/2026</td>
+                                <td><span class="table-badge tb-done">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Provisionamento de Infraestrutura Inicial na Nuvem</b></td>
+                                <td>17/06/2026</td>
+                                <td><span class="table-badge tb-done">Concluído</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Cancelamento de Auditoria SPED</b> (Contabilidade utiliza software próprio via XML)</td>
+                                <td>24/06/2026</td>
+                                <td><span class="table-badge tb-done">Concluído</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Em Andamento -->
+            <div class="main-card">
+                <div class="card-title" style="color: var(--azul-brand);"><i class="fa-solid fa-bars-progress"></i> Atividades em Andamento</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 55%;">Atividade Corrente</th>
+                                <th style="width: 25%;">Responsável</th>
+                                <th style="width: 20%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Instalação corporativa e saneamento do Banco de Dados</td>
+                                <td>DBSI / Simus</td>
+                                <td><span class="table-badge tb-doing">Execução</span></td>
+                            </tr>
+                            <tr>
+                                <td>Geração do ambiente Linux nativo para o E-conect</td>
+                                <td>Christian</td>
+                                <td><span class="table-badge tb-doing">Execução</span></td>
+                            </tr>
+                            <tr>
+                                <td>Alinhamento operacional de pacotes técnicos</td>
+                                <td>Christian / Clayton</td>
+                                <td><span class="table-badge tb-doing">Alinhamento</span></td>
+                            </tr>
+                            <tr>
+                                <td>Setup estrutural técnico (Superus, arquivos .INI e acessos)</td>
+                                <td>Infraestrutura Simus</td>
+                                <td><span class="table-badge tb-doing">Parametrização</span></td>
+                            </tr>
+                            <tr>
+                                <td>Solicitação de alteração de ambiente em nuvem junto à Skyone</td>
+                                <td>Equipe Técnica</td>
+                                <td><span class="table-badge tb-doing">Prazos</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pendências -->
+            <div class="main-card">
+                <div class="card-title" style="color: #f97316;"><i class="fa-solid fa-clock-with-calendar"></i> Pendências Cadastradas</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50%;">Descrição da Pendência</th>
+                                <th style="width: 25%;">Responsável</th>
+                                <th style="width: 25%;">Impacto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Ajuste ambiental na Skyone para recebimento do concentrador E-conect</td>
+                                <td>Skyone / Simus</td>
+                                <td><span class="table-badge tb-risk-med">Médio</span></td>
+                            </tr>
+                            <tr>
+                                <td>Correção e saneamento de erros no dump antigo do cliente</td>
+                                <td>DBSI / Cliente</td>
+                                <td><span class="table-badge tb-risk-high">Crítico</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Riscos -->
+            <div class="main-card">
+                <div class="card-title" style="color: var(--status-erro);"><i class="fa-solid fa-triangle-exclamation"></i> Riscos Mapeados</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Risco Identificado</th>
+                                <th style="width: 20%;">Impacto</th>
+                                <th style="width: 40%;">Plano de Mitigação Adotado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Erros persistentes na restauração do dump físico de dados</td>
+                                <td><span class="table-badge tb-risk-high">Alto</span></td>
+                                <td>Abertura de chamado especializado com a DBSI e acionamento alternativo imediato.</td>
+                            </tr>
+                            <tr>
+                                <td>Bloqueio de ISOs personalizadas do Linux na nuvem do parceiro</td>
+                                <td><span class="table-badge tb-risk-med">Médio</span></td>
+                                <td>Geração manual de imagem Linux estruturada e alinhamento dedicado de pacotes corporativos.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRÓXIMAS ETAPAS -->
+        <section class="main-card">
+            <div class="card-title"><i class="fa-solid fa-forward-step"></i> Próximas Etapas Imediatas</div>
+            <div class="next-steps-list">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <h5>Conclusão da Instalação do Banco</h5>
+                        <p>Previsão de encerramento do setup técnico básico, arquivos .INI e serviços nesta semana.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <h5>Instalação do Concentrador E-conect</h5>
+                        <p>Homologação física e estruturação dos pacotes de comunicação assim que houver retorno da Skyone.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <h5>Execução da Ferramenta Simus Converter</h5>
+                        <p>Início dos mapeamentos físicos de dados estruturados e tabelas legadas previsto para Julho/2026.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RODAPÉ -->
+        <footer>
+            <p>Projeto acompanhado com governança sênior pela <strong>Simus ERP</strong> — Competência 2026</p>
+        </footer>
+
+    </div>
+
+    <!-- SCRIPT DE COMPORTAMENTO DINÂMICO -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Percentual de progresso extraído do relatório (25.4%)
+            const progressoValor = 25.4;
+            
+            // 1. Atualizar a bateria de carregamento de forma dinâmica
+            const batteryInner = document.getElementById("main-battery-fill");
+            const batteryText = document.getElementById("battery-percentage-text");
+            const batteryDesc = document.getElementById("battery-status-desc");
+            
+            // Força um pequeno delay para engajar a animação CSS de transição
+            setTimeout(() => {
+                batteryInner.style.width = progressoValor + "%";
+                batteryText.innerText = progressoValor + "%";
+                
+                // Definição de cores dinâmicas, semáforo e indicador visual da logo
+                const redLight = document.getElementById("light-red");
+                const yellowLight = document.getElementById("light-yellow");
+                const greenLight = document.getElementById("light-green");
+                const healthLabel = document.getElementById("health-label");
+                const healthLogo = document.getElementById("health-logo");
+                
+                if (progressoValor <= 30) {
+                    batteryInner.style.backgroundColor = "var(--status-erro)";
+                    batteryDesc.innerText = "Fase inicial de infraestrutura e saneamento de dados.";
+                    
+                    yellowLight.classList.add("active");
+                    healthLogo.classList.add("health-yellow");
+                    healthLabel.innerText = "Saúde: Em Setup Inicial";
+                    healthLabel.style.color = "var(--status-alerta)";
+                } else if (progressoValor > 30 && progressoValor <= 70) {
+                    batteryInner.style.backgroundColor = "var(--status-alerta)";
+                    batteryDesc.innerText = "Fase intermediária de parametrização de sistemas.";
+                    yellowLight.classList.add("active");
+                    healthLogo.classList.add("health-yellow");
+                    healthLabel.innerText = "Saúde: Estável";
+                    healthLabel.style.color = "var(--status-alerta)";
+                } else {
+                    batteryInner.style.backgroundColor = "var(--status-sucesso)";
+                    batteryDesc.innerText = "Fase avançada de homologação, simulados e Go Live.";
+                    greenLight.classList.add("active");
+                    healthLogo.classList.add("health-green");
+                    healthLabel.innerText = "Saúde: Excelente";
+                    healthLabel.style.color = "var(--status-sucesso)";
+                }
+            }, 200);
+
+            // 2. Montagem dinâmica do Donut Chart (Donut de conic-gradient customizado)
+            const chart = document.getElementById("volumetria-chart");
+            chart.style.background = `conic-gradient(
+                var(--status-sucesso) 0% 40%, 
+                var(--azul-brand) 40% 73.3%, 
+                var(--status-alerta) 73.3% 86.6%, 
+                var(--status-erro) 86.6% 100%
+            )`;
+        });
+    </script>
+</body>
+</html>
